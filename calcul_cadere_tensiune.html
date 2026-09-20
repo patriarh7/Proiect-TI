@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculul Căderii de Tensiune într-un Conductor</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#111827;
+    --card:#1e293b;
+    --accent:#38bdf8;
+    --accent2:#22c55e;
+    --danger:#ef4444;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --border:#334155;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Roboto, Arial, sans-serif;
+    background:linear-gradient(160deg,#0f172a,#111827 60%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    padding:18px 24px;
+    text-align:center;
+    background:rgba(17,24,39,0.9);
+    border-bottom:1px solid var(--border);
+  }
+  header h1{
+    margin:0 0 4px 0;
+    font-size:1.4rem;
+    letter-spacing:0.5px;
+  }
+  header p{
+    margin:0;
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+  main{
+    flex:1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:24px;
+    padding:28px;
+    max-width:1200px;
+    margin:0 auto;
+    width:100%;
+  }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  .form-panel{
+    flex:1 1 340px;
+  }
+  .visual-panel{
+    flex:1 1 340px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+  }
+  .sidebar{
+    flex:1 1 260px;
+  }
+  h2{
+    font-size:1.1rem;
+    margin-top:0;
+    color:var(--accent);
+    border-bottom:1px solid var(--border);
+    padding-bottom:8px;
+  }
+  label{
+    display:block;
+    margin:14px 0 6px;
+    font-size:0.9rem;
+    color:var(--muted);
+  }
+  input, select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#0f172a;
+    color:var(--text);
+    font-size:0.95rem;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  button{
+    margin-top:20px;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(90deg, var(--accent), #0ea5e9);
+    color:#01202f;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(56,189,248,0.35);
+  }
+  .results{
+    margin-top:22px;
+    background:#0f172a;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    display:none;
+  }
+  .results.show{display:block;}
+  .results .row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px dashed var(--border);
+    font-size:0.92rem;
+  }
+  .results .row:last-child{border-bottom:none;}
+  .results .value{
+    font-weight:700;
+    color:var(--accent2);
+  }
+  .status{
+    margin-top:14px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:0.88rem;
+    font-weight:600;
+    text-align:center;
+    display:none;
+  }
+  .status.ok{
+    background:rgba(34,197,94,0.15);
+    color:var(--accent2);
+    border:1px solid var(--accent2);
+    display:block;
+  }
+  .status.bad{
+    background:rgba(239,68,68,0.15);
+    color:var(--danger);
+    border:1px solid var(--danger);
+    display:block;
+  }
+
+  /* --- Simulator vizual animat --- */
+  .wire-wrap{
+    width:100%;
+    max-width:380px;
+    margin-top:10px;
+  }
+  svg{width:100%;height:auto;display:block;}
+  .wire{
+    stroke:#64748b;
+    stroke-width:10;
+    fill:none;
+  }
+  .electron{
+    fill:var(--accent);
+    filter:drop-shadow(0 0 4px var(--accent));
+  }
+  .bulb-glow{
+    transition:opacity 0.4s ease, filter 0.4s ease;
+  }
+  .source-label, .load-label{
+    font-size:12px;
+    fill:var(--muted);
+  }
+  .legend{
+    margin-top:14px;
+    font-size:0.8rem;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+  .desc-box p{
+    font-size:0.88rem;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .desc-box ul{
+    font-size:0.86rem;
+    color:var(--muted);
+    padding-left:18px;
+    line-height:1.6;
+  }
+  footer{
+    text-align:center;
+    padding:16px;
+    font-size:0.8rem;
+    color:var(--muted);
+    background:rgba(17,24,39,0.9);
+    border-top:1px solid var(--border);
+  }
+  @media (max-width:700px){
+    main{padding:16px;gap:16px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Calculator Cădere de Tensiune într-un Conductor</h1>
+  <p>Autor: Ursachi Mihai | FEIE, UTM</p>
+</header>
+
+<main>
+  <!-- Panou de intrare -->
+  <section class="panel form-panel">
+    <h2>Parametri de intrare</h2>
+
+    <label for="voltage">Tensiune sursă U (V)</label>
+    <input type="number" id="voltage" value="230" step="0.1" min="0">
+
+    <label for="current">Curent I (A)</label>
+    <input type="number" id="current" value="10" step="0.1" min="0">
+
+    <label for="length">Lungimea conductorului L (m) — dus-întors</label>
+    <input type="number" id="length" value="50" step="1" min="0">
+
+    <label for="section">Secțiunea conductorului S (mm²)</label>
+    <input type="number" id="section" value="2.5" step="0.1" min="0.01">
+
+    <label for="material">Material conductor</label>
+    <select id="material">
+      <option value="0.0175">Cupru (ρ = 0.0175 Ω·mm²/m)</option>
+      <option value="0.0282">Aluminiu (ρ = 0.0282 Ω·mm²/m)</option>
+    </select>
+
+    <button onclick="calculeaza()">Calculează căderea de tensiune</button>
+
+    <div class="results" id="results">
+      <div class="row"><span>Rezistența conductorului R</span><span class="value" id="rRes">-</span></div>
+      <div class="row"><span>Cădere de tensiune ΔU</span><span class="value" id="dUres">-</span></div>
+      <div class="row"><span>Cădere de tensiune (%)</span><span class="value" id="pRes">-</span></div>
+      <div class="row"><span>Tensiune la receptor</span><span class="value" id="uFinal">-</span></div>
+    </div>
+
+    <div class="status" id="statusBox"></div>
+  </section>
+
+  <!-- Panou vizual / simulator animat -->
+  <section class="panel visual-panel">
+    <h2>Simulare vizuală a circuitului</h2>
+    <div class="wire-wrap">
+      <svg viewBox="0 0 380 160" id="circuitSvg">
+        <!-- sursa -->
+        <circle cx="40" cy="80" r="24" fill="none" stroke="#64748b" stroke-width="4"/>
+        <text x="40" y="85" text-anchor="middle" fill="#e2e8f0" font-size="14">U</text>
+        <text x="40" y="120" class="source-label" text-anchor="middle">Sursă</text>
+
+        <!-- fir sus -->
+        <path class="wire" d="M64 65 H316" />
+        <!-- fir jos -->
+        <path class="wire" d="M64 95 H316" />
+
+        <!-- becul / sarcina -->
+        <circle id="bulb" class="bulb-glow" cx="340" cy="80" r="26" fill="#facc15" opacity="0.3"/>
+        <circle cx="340" cy="80" r="26" fill="none" stroke="#64748b" stroke-width="4"/>
+        <text x="340" y="85" text-anchor="middle" fill="#1e293b" font-size="12" font-weight="bold">R</text>
+        <text x="340" y="125" class="load-label" text-anchor="middle">Receptor</text>
+
+        <!-- electroni animați -->
+        <circle class="electron" r="4" cx="70" cy="65">
+          <animate attributeName="cx" values="70;310" dur="2s" repeatCount="indefinite" id="e1"/>
+        </circle>
+        <circle class="electron" r="4" cx="150" cy="65">
+          <animate attributeName="cx" values="70;310" dur="2s" begin="0.6s" repeatCount="indefinite" id="e2"/>
+        </circle>
+        <circle class="electron" r="4" cx="230" cy="65">
+          <animate attributeName="cx" values="70;310" dur="2s" begin="1.2s" repeatCount="indefinite" id="e3"/>
+        </circle>
+      </svg>
+    </div>
+    <div class="legend">
+      Viteza electronilor și intensitatea luminii becului se ajustează în funcție de curent și de căderea de tensiune calculată.
+    </div>
+  </section>
+
+  <!-- Panou lateral descriere -->
+  <aside class="panel sidebar desc-box">
+    <h2>Despre aplicație</h2>
+    <p>
+      Această aplicație calculează <strong>căderea de tensiune</strong> pe un conductor electric monofazat,
+      pornind de la lungimea, secțiunea și materialul conductorului, precum și de la curentul care îl parcurge.
+      Problema este esențială în proiectarea instalațiilor electrice, pentru a garanta funcționarea corectă
+      a receptoarelor și respectarea normativelor (de regulă, cădere admisă ≤ 3–5%).
+    </p>
+    <h2>Funcții principale</h2>
+    <ul>
+      <li>Calcul automat al rezistenței conductorului (R = ρ·L/S)</li>
+      <li>Calcul al căderii de tensiune (ΔU = I·R) și procentual</li>
+      <li>Evaluare dacă rezultatul se încadrează în limitele admise (≤5%)</li>
+      <li>Simulare vizuală animată a circuitului electric</li>
+      <li>Interfață responsive, adaptată pentru desktop și mobil</li>
+    </ul>
+  </aside>
+</main>
+
+<footer>
+  Realizat în cadrul cursului TI și Securitate cibernetică, FEIE, UTM
+</footer>
+
+<script>
+function calculeaza(){
+  const U = parseFloat(document.getElementById('voltage').value);
+  const I = parseFloat(document.getElementById('current').value);
+  const L = parseFloat(document.getElementById('length').value);
+  const S = parseFloat(document.getElementById('section').value);
+  const rho = parseFloat(document.getElementById('material').value);
+
+  const statusBox = document.getElementById('statusBox');
+  const resultsBox = document.getElementById('results');
+
+  if(isNaN(U)||isNaN(I)||isNaN(L)||isNaN(S)||U<=0||I<0||L<=0||S<=0){
+    statusBox.className = 'status bad';
+    statusBox.textContent = '⚠️ Introduceți valori numerice valide și pozitive.';
+    resultsBox.classList.remove('show');
+    return;
+  }
+
+  const R = (rho * L) / S;          // ohmi
+  const dU = I * R;                  // volți
+  const procent = (dU / U) * 100;    // %
+  const uFinal = U - dU;
+
+  document.getElementById('rRes').textContent = R.toFixed(3) + ' Ω';
+  document.getElementById('dUres').textContent = dU.toFixed(2) + ' V';
+  document.getElementById('pRes').textContent = procent.toFixed(2) + ' %';
+  document.getElementById('uFinal').textContent = uFinal.toFixed(2) + ' V';
+  resultsBox.classList.add('show');
+
+  if(procent <= 5){
+    statusBox.className = 'status ok';
+    statusBox.textContent = '✅ Căderea de tensiune este acceptabilă (≤ 5%).';
+  } else {
+    statusBox.className = 'status bad';
+    statusBox.textContent = '❌ Căderea de tensiune depășește limita admisă (5%). Măriți secțiunea conductorului.';
+  }
+
+  actualizeazaAnimatie(I, procent);
+}
+
+function actualizeazaAnimatie(I, procent){
+  // Ajustăm viteza electronilor în funcție de curent (mai mult curent = mai repede)
+  const dur = Math.max(0.4, 3 - (I/10));
+  ['e1','e2','e3'].forEach((id, idx)=>{
+    const anim = document.getElementById(id);
+    anim.setAttribute('dur', dur.toFixed(2)+'s');
+  });
+
+  // Ajustăm luminozitatea becului în funcție de cât de mică e căderea de tensiune
+  const bulb = document.getElementById('bulb');
+  let opacity = Math.max(0.15, 1 - (procent/20));
+  bulb.style.opacity = opacity;
+  if(procent > 5){
+    bulb.style.filter = 'drop-shadow(0 0 2px #7f1d1d)';
+  } else {
+    bulb.style.filter = 'drop-shadow(0 0 10px #facc15)';
+  }
+}
+
+// calcul inițial la încărcare
+window.onload = calculeaza;
+</script>
+
+</body>
+</html>
